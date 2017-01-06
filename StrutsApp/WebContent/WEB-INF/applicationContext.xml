@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+
+		<property name="driverClassName">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+
+		<property name="url">
+			<value>jdbc:mysql://localhost:3306/strutsapp</value>
+		</property>
+
+		<property name="username">
+			<value>root</value>
+		</property>
+
+		<property name="password">
+			<value>hello</value>
+		</property>
+
+	</bean>
+
+
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+
+		<property name="dataSource">
+			<ref local="dataSource" />
+		</property>
+
+		<property name="mappingResources">
+			<list>
+				<value>cn/zq/www/entity/User.hbm.xml</value>
+			</list>
+		</property>
+
+
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+			</props>
+		</property>
+
+	</bean>
+
+	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<bean id="userDao" class="cn.zq.www.dao.impl.UserDAOImpl" scope="singleton">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
+	
+	<bean id="userServiceTarget" class="cn.zq.www.service.impl.UserServiceImpl">
+		<property name="userDao" ref="userDao" />
+	</bean>
+	
+	
+	<bean id="userService" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+
+		<property name="target" ref="userServiceTarget"></property>
+		<property name="transactionManager" ref="transactionManager"></property>
+
+		<property name="transactionAttributes">
+
+			<props>
+				<prop key="find*">PROPAGATION_REQUIRED,readOnly</prop>
+				<prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+
+		</property>
+	</bean>
+
+
+	
+	<bean id="userAction" class="cn.zq.www.action.UserAction" scope="prototype">
+		<property name="service" ref="userService" />
+	</bean>
+	
+	<bean id="userDeleteAction" class="cn.zq.www.action.UserDeleteAction" scope="prototype">
+		<property name="service" ref="userService" />
+	</bean>
+	
+	<bean id="userListAction" class="cn.zq.www.action.UserListAction" scope="prototype">
+		<property name="service" ref="userService" />
+	</bean>
+	
+	<bean id="userUpdateAction" class="cn.zq.www.action.UserUpdateAction" scope="prototype">
+		<property name="service" ref="userService" />
+	</bean>
+	
+</beans>
